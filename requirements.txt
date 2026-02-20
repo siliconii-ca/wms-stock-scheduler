@@ -1,0 +1,8 @@
+pandas
+APScheduler
+python-dotenv
+loguru
+openpyxl
+requests
+pyodbc
+sqlalchemy

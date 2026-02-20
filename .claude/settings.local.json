@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(BASE=\"d:/sonasource/SONA/wms_stock_hitory\")",
+      "Bash(\"$BASE/src/__init__.py\" )",
+      "Bash(\"$BASE/src/downloader/__init__.py\" )",
+      "Bash(\"$BASE/src/processor/__init__.py\" )",
+      "Bash(\"$BASE/src/analyzer/__init__.py\" )",
+      "Bash(\"$BASE/src/reporter/__init__.py\" )",
+      "Bash(\"$BASE/scheduler/__init__.py\" )",
+      "Bash(\"$BASE/scheduler/jobs/__init__.py\" )",
+      "Bash(\"$BASE/tests/__init__.py\" )",
+      "Bash(\"$BASE/logs/.gitkeep\" )",
+      "Bash(\"$BASE/data/raw/.gitkeep\" )",
+      "Bash(\"$BASE/data/processed/.gitkeep\" )",
+      "Bash(\"$BASE/data/reports/.gitkeep\")",
+      "Bash(python:*)",
+      "Bash(cmd /c \"dir D:\\inventory-test\\daily-stock\\Stock*.csv /b\")",
+      "Read(//d/inventory-test/daily-stock/**)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
