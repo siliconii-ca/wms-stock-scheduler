@@ -92,106 +92,6 @@ class SlackNotificationService:
             }
 
 
-def convert_markdown_to_slack_blocks(md_report: str) -> List[Dict[str, Any]]:
-    """
-    마크다운 레포트를 슬랙 Block Kit 형식으로 변환
-
-    Args:
-        md_report: 마크다운 레포트 내용
-
-    Returns:
-        슬랙 블록 리스트
-    """
-    blocks = []
-    lines = md_report.split('\n')
-    i = 0
-
-    while i < len(lines):
-        line = lines[i].strip()
-
-        # 빈 줄 스킵
-        if not line:
-            i += 1
-            continue
-
-        # 헤더 (# 제목)
-        if line.startswith('# '):
-            blocks.append({
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": line[2:].strip()[:150],  # 슬랙 헤더 최대 150자
-                    "emoji": True
-                }
-            })
-            blocks.append({"type": "divider"})
-
-        # 서브헤더 (## 제목)
-        elif line.startswith('## '):
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{line[3:].strip()}*"
-                }
-            })
-
-        # 서브서브헤더 (### 제목)
-        elif line.startswith('### '):
-            blocks.append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{line[4:].strip()}*"
-                }
-            })
-
-        # 구분선 (---)
-        elif line.startswith('---'):
-            blocks.append({"type": "divider"})
-
-        # 리스트 항목 (-, *, 숫자.)
-        elif line.startswith(('-', '*', '1.', '2.', '3.', '4.', '5.', '6.', '7.', '8.', '9.')):
-            # 연속된 리스트 항목 수집
-            list_items = []
-            while i < len(lines) and lines[i].strip():
-                item_line = lines[i].strip()
-                if item_line.startswith(('-', '*')) or re.match(r'^\d+\.', item_line):
-                    # 마크다운 **굵게** 처리 유지
-                    list_items.append(item_line)
-                    i += 1
-                else:
-                    break
-            i -= 1  # 다음 루프를 위해 조정
-
-            if list_items:
-                # 최대 3000자 제한 (슬랙 블록 제한)
-                text = '\n'.join(list_items)[:3000]
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": text
-                    }
-                })
-
-        # 일반 텍스트
-        else:
-            if line:
-                blocks.append({
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": line[:3000]
-                    }
-                })
-
-        i += 1
-
-    # 슬랙 블록 최대 50개 제한
-    return blocks[:50]
-
-
 def send_stock_report_to_slack(
     md_report: str,
     today_str: str,
@@ -216,34 +116,20 @@ def send_stock_report_to_slack(
         logger.warning("슬랙 수신자가 설정되지 않았습니다. (SLACK_DM_RECEIVER)")
         return
 
-    # TODO: 테스트 완료 후 실제 블록 변환 활성화
-    # slack_blocks = convert_markdown_to_slack_blocks(md_report)
+    # title = f"📈 Stock Report ({today_str} vs {yesterday_str})"
+    # contents = f"*{title}*\n\n" + _truncate_for_slack(md_report)
 
-    # 테스트용 간단한 메시지
-    test_blocks = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "TEST"
-            }
-        }
-    ]
+    slack_contents = format_stock_report_for_slack(md_report)
 
-
-    title = f"📈 Stock Report ({today_str} vs {yesterday_str})"
-    contents = f"*{title}*\n\n" + _truncate_for_slack(md_report)
 
     # 페이로드 구성
     payload_items = [
         {
             "msgType": "daily-stock-report",
-            "additionalData": {
-                "dmReceiver": dm_receiver,
-                "date_from": yesterday_str,
-                "date_to": today_str,
-                "contents": contents
-            }
+            "dmReceiver": dm_receiver,
+            "date_from": yesterday_str,
+            "date_to": today_str,
+            "contents": slack_contents
         }
     ]
 
@@ -264,3 +150,61 @@ def _truncate_for_slack(text: str, limit: int = 35000) -> str:
     if text is None:
         return ""
     return text if len(text) <= limit else text[:limit] + "\n\n…(내용이 길어 일부만 전송됨)"
+
+
+def format_stock_report_for_slack(md_report: str) -> str:
+    lines = md_report.splitlines()
+
+    total = changed = change_rate = avg = max_v = min_v = ""
+    inc = dec = ""
+
+    top_items = []
+
+    for line in lines:
+        if "총 상품 수" in line:
+            total = re.findall(r"\d[\d,]*", line)[0]
+        elif "변동 상품" in line:
+            changed = re.findall(r"\d[\d,]*", line)[0]
+        elif "변동 비율" in line:
+            change_rate = re.findall(r"[\d.]+%", line)[0]
+        elif "평균 변동폭" in line:
+            avg = re.findall(r"[\d.]+%", line)[0]
+        elif "최대 변동" in line:
+            max_v = re.findall(r"[\d.]+%", line)[0]
+        elif "최소 변동" in line:
+            min_v = re.findall(r"[\d.]+%", line)[0]
+        elif "증가" in line and "개" in line:
+            inc = re.findall(r"\d+", line)[0]
+        elif "감소" in line and "개" in line:
+            dec = re.findall(r"\d+", line)[0]
+        elif line.strip().startswith(tuple(str(i) + "." for i in range(1, 10))):
+            # 상세 목록 파싱
+            parts = line.split("**")
+            if len(parts) >= 3:
+                name = parts[1]
+                diff_match = re.search(r"\((\+?[\d.]+%)\)", line)
+                diff = diff_match.group(1) if diff_match else ""
+                top_items.append(f"{len(top_items)+1}) {name} ({diff})")
+
+    top_items = top_items[:5]
+
+    slack_message = f"""
+📊 *재고 일치율 변동 분석 리포트*
+
+━━━━━━━━━━━━━━━━━━
+📈 *요약*
+• 총 상품 수: {total}개
+• 변동 상품: {changed}개 ({change_rate})
+• 평균 변동폭: {avg}
+• 최대/최소 변동: {max_v} / {min_v}
+
+━━━━━━━━━━━━━━━━━━
+🔁 *변동 방향*
+• 증가: {inc}개
+• 감소: {dec}개
+
+━━━━━━━━━━━━━━━━━━
+⚠️ *일치율 증가 TOP 5*
+""" + "\n".join(top_items) + "\n\n(전체 상세는 리포트 참조)"
+
+    return slack_message.strip()
