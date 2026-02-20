@@ -255,3 +255,9 @@ def export_stock_data():
     except Exception as e:
         print(f"❌ DB 데이터 조회 실패: {e}")
         return None
+
+
+if __name__ == "__main__":
+    print(f"✅ 실행")
+
+    export_stock_data()

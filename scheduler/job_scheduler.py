@@ -36,7 +36,7 @@ def create_scheduler() -> BlockingScheduler:
     # 레포트 잡: interval 방식
     scheduler.add_job(
         run_report_job,
-        trigger=IntervalTrigger(minutes=SCHEDULE_REPORT_INTERVAL_MINUTES),
+        trigger=IntervalTrigger(hour=8, minute=10),
         id="report_job",
         name="데이터 분석/레포팅",
         replace_existing=True,

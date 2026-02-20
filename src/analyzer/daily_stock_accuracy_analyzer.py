@@ -10,6 +10,7 @@ import pandas as pd
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import requests
 
 # .env 파일 로드 (환경변수 읽기)
 load_dotenv()
@@ -584,14 +585,14 @@ def main():
     if send_to_slack and len(changed) > 0:
         print("\n📤 슬랙 메시지 전송 중...")
         try:
-            # 프로젝트 루트를 sys.path에 추가
             from pathlib import Path
             project_root = Path(__file__).resolve().parent.parent.parent
             if str(project_root) not in sys.path:
                 sys.path.insert(0, str(project_root))
 
             from src.reporter.slack_notifier import send_stock_report_to_slack
-            send_stock_report_to_slack(md_report, today_str, yesterday_str)
+            result = send_stock_report_to_slack(md_report, today_str, yesterday_str)
+            print(f"✅ 슬랙 전송 완료: {result}")
         except ImportError as e:
             print(f"⚠️ 슬랙 전송 모듈 로드 실패: {e}")
         except Exception as e:
@@ -609,6 +610,54 @@ def main():
     print(f"💡 마크다운 파일을 Claude AI에 복사해서 붙여넣으세요!")
     print(f"   또는 VS Code에서 {md_path} 파일을 열어보세요.")
 
+
+def _truncate_for_slack(text: str, limit: int = 35000) -> str:
+    # Slack/중간 게이트웨이에서 길이 제한에 걸릴 수 있어서 안전하게 컷
+    if text is None:
+        return ""
+    return text if len(text) <= limit else text[:limit] + "\n\n…(내용이 길어 일부만 전송됨)"
+
+def send_stock_report_to_slack(md_report: str, today_str: str, yesterday_str: str):
+    """
+    md_report: 마크다운 문자열(파일 내용을 읽은 결과)
+    """
+    api_base = os.getenv("COMMON_API_PATH")  # 예: https://company-api.example.com
+    api_path = os.getenv("SLACK_DM_PATH", "/api/slack/dm")
+    api_url = f"{api_base.rstrip('/')}{api_path}"
+
+    # 수신자(이메일 or 유저ID) - 지금 너희는 이메일도 잘 갔다고 했으니 일단 이메일로
+    dm_receiver = os.getenv("SLACK_DM_RECEIVER", "sona@siliconii.net")
+
+    # 인증이 필요한 경우를 대비 (토큰/키 이름은 너희 환경에 맞춰 수정)
+    api_token = os.getenv("SLACK_API_TOKEN", "")
+    headers = {"Content-Type": "application/json"}
+    if api_token:
+        headers["Authorization"] = f"Bearer {api_token}"
+
+    title = f"📈 Stock Report ({today_str} vs {yesterday_str})"
+    contents = f"*{title}*\n\n" + _truncate_for_slack(md_report)
+
+    payload = [
+        {
+            "msgType": "daily-stock-report",
+            "additionalData": {
+                "dmReceiver": dm_receiver,
+                "contents": contents
+            }
+        }
+    ]
+
+    timeout_sec = float(os.getenv("SLACK_API_TIMEOUT", "30"))
+
+    resp = requests.post(api_url, json=payload, headers=headers, timeout=timeout_sec)
+    print(f"{payload}")
+    # 디버깅을 위해 응답 확인 (200이어도 body에 에러가 있을 수 있음)
+    try:
+        resp.raise_for_status()
+    except Exception:
+        raise RuntimeError(f"Slack API HTTP {resp.status_code}: {resp.text}")
+
+    return resp.text
 
 if __name__ == "__main__":
     main()

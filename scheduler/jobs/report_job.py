@@ -16,9 +16,9 @@ def run_report_job():
         if str(project_root) not in sys.path:
             sys.path.insert(0, str(project_root))
 
-        # data_analyzer 모듈의 main 함수 임포트 및 실행
-        from src.analyzer import data_analyzer
-        data_analyzer.main()
+        # daily_stock_accuracy_analyzer 모듈의 main 함수 임포트 및 실행
+        from src.analyzer import daily_stock_accuracy_analyzer
+        daily_stock_accuracy_analyzer.main()
 
         logger.info("=== [JOB] 레포트 잡 완료 ===")
     except Exception as e:

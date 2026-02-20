@@ -16,7 +16,8 @@ load_dotenv()
 # 로거 설정
 logger = logging.getLogger(__name__)
 if not logger.handlers:
-    handler = logging.StreamHandler()
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setStream(sys.stdout)  # UTF-8로 재설정된 stdout 사용
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
