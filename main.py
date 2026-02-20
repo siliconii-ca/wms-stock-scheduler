@@ -4,6 +4,10 @@ from loguru import logger
 from config.settings import LOGS_DIR, LOG_LEVEL, LOG_ROTATION, LOG_RETENTION
 from scheduler.job_scheduler import create_scheduler
 
+# Windows 터미널 cp949 환경에서 UTF-8 출력 가능하도록 강제 설정
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+
 # 프로젝트 루트를 sys.path에 추가
 project_root = Path(__file__).resolve().parent
 if str(project_root) not in sys.path:
