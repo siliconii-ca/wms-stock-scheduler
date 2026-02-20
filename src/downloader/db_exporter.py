@@ -172,20 +172,27 @@ class DBExporter:
             physical_qty = df['wms_total_qty'] + df['waiting_qty']
             cms_qty = df['cms_total_qty']
 
-            # 0으로 나누기 방지
+            # 0으로 나누기 방지 및 음수 체크
             accuracy = []
             for i in range(len(df)):
-                cms = cms_qty.iloc[i]
-                physical = physical_qty.iloc[i]
+                cms = float(cms_qty.iloc[i]) if pd.notna(cms_qty.iloc[i]) else 0
+                physical = float(physical_qty.iloc[i]) if pd.notna(physical_qty.iloc[i]) else 0
 
                 if cms == 0 and physical == 0:
                     acc = 100.0
                 elif cms == 0 or physical == 0:
                     acc = 0.0
+                elif cms < 0 or physical < 0:
+                    acc = 0.0
                 else:
-                    acc = (min(cms, physical) / max(cms, physical)) * 100
+                    least = min(cms, physical)
+                    greatest = max(cms, physical)
+                    valid = round(least / greatest * 100, 1)
+                    if valid >= 100 and least != greatest:
+                        valid = 99.9
+                    acc = valid
 
-                accuracy.append(round(acc, 1))
+                accuracy.append(acc)
 
             df_export['일치율'] = accuracy
 
