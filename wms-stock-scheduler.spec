@@ -7,10 +7,9 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        # 환경 설정 파일 포함
-        ('.env', '.'),
         # SQL 파일 포함
         ('repository/stock_export.sql', 'repository'),
+        # 환경 설정 파일은 빌드에서 제외 (외부 파일 사용)
         # README 파일 포함 (선택적)
         # ('README.md', '.'),
     ],

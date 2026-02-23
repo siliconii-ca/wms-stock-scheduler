@@ -58,7 +58,7 @@ class SlackNotificationService:
                 "ovErrDesc": "COMMON_API_PATH가 설정되지 않았습니다."
             }
 
-        url = f"{self.base_url}/api/slack/dm"
+        url = f"{self.base_url}/api/slack/channel"
 
         try:
             logger.info(f"슬랙 메시지 전송: {url}")
@@ -138,7 +138,7 @@ def send_stock_report_to_slack(
     # 전송
     result = slack.send_dm_message(payload_items)
 
-    if result["onResult"] == 0:
+    if result["onResult"] == 1:
         logger.info(f"슬랙 메시지 전송 완료: {dm_receiver}")
     else:
         logger.error(f"슬랙 메시지 전송 실패: {result['ovErrDesc']}")
