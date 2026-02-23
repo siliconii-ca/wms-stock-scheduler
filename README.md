@@ -19,7 +19,7 @@
 build.bat
 ```
 
-`WMS-Stock-Scheduler-Deploy` 폴더가 생성됩니다.
+`deploy` 폴더가 생성됩니다.
 
 ### 2. 설정
 
