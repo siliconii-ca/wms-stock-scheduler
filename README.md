@@ -42,6 +42,20 @@ WMS-Stock-Scheduler.exe
 WMS-Stock-Scheduler.exe export
 ```
 
+### 4. 서비스 등록
+
+배포 서버(`deploy` 폴더)를 원하는 위치에 복사한 뒤 `nassim` 명령어로 Windows 서비스에 등록하면 재부팅 후에도 자동 실행됩니다.
+
+```powershell
+nassim install WMSStockScheduler "C:\WMS-Stock-Scheduler-Deploy\WMS-Stock-Scheduler.exe"
+nassim set WMSStockScheduler start auto
+nassim start WMSStockScheduler
+```
+
+- `WMSStockScheduler`는 서비스 이름이므로 필요 시 다른 이름으로 변경할 수 있습니다.
+- `config.env` 경로가 기본 위치가 아니라면 `nassim edit`으로 `Working directory`와 `AppDirectory`를 배포 경로로 맞춰 주세요.
+- 등록 후 `nassim status WMSStockScheduler`로 정상 실행 여부를 확인합니다.
+
 ## 📁 폴더 구조
 
 ```
