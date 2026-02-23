@@ -17,6 +17,7 @@ a = Analysis(
         # 명시적으로 포함해야 하는 모듈들
         'sqlalchemy.dialects.mssql',
         'pyodbc',
+        'pymssql',  # Native SQL Server driver
         'apscheduler.schedulers.blocking',
         'apscheduler.triggers.interval',
         'apscheduler.triggers.cron',
@@ -30,11 +31,13 @@ a = Analysis(
         'src.analyzer.daily_stock_accuracy_analyzer',
         'src.reporter.slack_notifier',
         'src.reporter.notion_client',
+        'src.reporter.notion_client_database',
         'scheduler.job_scheduler',
         'scheduler.jobs.download_job',
         'scheduler.jobs.report_job',
         'scheduler.jobs.db_export_job',
         'config.settings',
+        'config.path_helper',
     ],
     hookspath=[],
     hooksconfig={},
