@@ -86,4 +86,5 @@ SELECT a.prod_cd
 		,a.waiting_qty
 		,a.has_waiting_qty
 FROM CTE_CMS_STOCK A
-WHERE  (cms_total_qty != 0 OR wms_total_qty != 0)
+WHERE NOT (cms_total_qty = 0 AND wms_total_qty = 0 AND has_waiting_qty = 0)
+
