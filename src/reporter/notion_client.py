@@ -237,49 +237,46 @@ class NotionClient:
                 i -= 1  # 마지막 라인 조정
 
                 # Notion 테이블 생성 (table 블록)
+                # 테이블 children 최대 100개 제한 → 헤더 포함 99행씩 분할
                 table_width = len(headers)
-                table_block = {
-                    "object": "block",
-                    "type": "table",
-                    "table": {
-                        "table_width": table_width,
-                        "has_column_header": True,
-                        "has_row_header": False,
-                        "children": []
-                    }
-                }
 
-                # 헤더 행 추가
-                header_cells = []
-                for header in headers:
-                    header_cells.append(self._parse_rich_text(header))
-                table_block["table"]["children"].append({
+                header_row = {
                     "object": "block",
                     "type": "table_row",
                     "table_row": {
-                        "cells": header_cells
+                        "cells": [self._parse_rich_text(h) for h in headers]
                     }
-                })
+                }
 
-                # 데이터 행 추가
+                # 데이터 행 변환
+                all_data_rows = []
                 for row_data in table_rows:
-                    # 셀 수를 헤더 수에 맞춤
                     while len(row_data) < table_width:
                         row_data.append("")
                     row_data = row_data[:table_width]
-
-                    row_cells = []
-                    for cell in row_data:
-                        row_cells.append(self._parse_rich_text(cell))
-                    table_block["table"]["children"].append({
+                    all_data_rows.append({
                         "object": "block",
                         "type": "table_row",
                         "table_row": {
-                            "cells": row_cells
+                            "cells": [self._parse_rich_text(cell) for cell in row_data]
                         }
                     })
 
-                blocks.append(table_block)
+                # 99행씩 분할 (헤더 1개 + 데이터 99개 = 100개 이하)
+                chunk_size = 99
+                for chunk_start in range(0, max(len(all_data_rows), 1), chunk_size):
+                    chunk_rows = all_data_rows[chunk_start:chunk_start + chunk_size]
+                    table_block = {
+                        "object": "block",
+                        "type": "table",
+                        "table": {
+                            "table_width": table_width,
+                            "has_column_header": True,
+                            "has_row_header": False,
+                            "children": [header_row] + chunk_rows
+                        }
+                    }
+                    blocks.append(table_block)
 
             # 리스트
             elif line.strip().startswith("- "):
