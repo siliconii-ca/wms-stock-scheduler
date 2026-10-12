@@ -314,8 +314,8 @@ def generate_markdown_report(comparison, changed, date_str):
             if len(df) == 0:
                 return ""
 
-            # CMS URL 생성
-            cms_url = os.getenv("CMS_URL", "http://localcms.siliconii.com")
+            # WMS URL 생성
+            wms_url = os.getenv("WMS_URL", "http://localwms.siliconii.com")
 
             table_md = f"### {title}\n\n"
             table_md += "| No | 상품코드 | 일치율(어제) | 일치율(오늘) | 변동 | CMS재고 | CMS변동 | WMS수량 | WMS변동 |\n"
@@ -330,7 +330,7 @@ def generate_markdown_report(comparison, changed, date_str):
                 physical_diff = physical_today - physical_yesterday
 
                 prod_cd = row['prod_cd']
-                prod_link = f"[{prod_cd}]({cms_url}/WMS/CmsWmsStock?ProdCd={prod_cd})"
+                prod_link = f"[{prod_cd}]({wms_url}/Dashboard/CmsWmsStock?ProdCd={prod_cd})"
 
                 table_md += (
                     f"| {idx} | **{prod_link}** | "
